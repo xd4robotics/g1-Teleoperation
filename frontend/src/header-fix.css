@@ -1,0 +1,88 @@
+/* Mantém o ícone do tema no centro geométrico do botão. */
+header .theme-toggle {
+  position: relative !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: block !important;
+  overflow: hidden !important;
+}
+
+header .theme-toggle svg {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 18px !important;
+  height: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.theme-dark header .theme-toggle svg:first-child,
+.theme-light header .theme-toggle svg:last-child {
+  display: none !important;
+}
+
+.theme-dark header .theme-toggle svg:last-child,
+.theme-light header .theme-toggle svg:first-child {
+  display: block !important;
+}
+
+.theme-dark header .theme-toggle svg:last-child {
+  color: #20c7ff !important;
+}
+
+.theme-light header .theme-toggle svg:first-child {
+  color: #d78b00 !important;
+}
+
+header .brand.simple-brand {
+  width: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  white-space: nowrap;
+}
+
+header .brand.simple-brand .brand-mark {
+  width: 34px !important;
+  height: 34px !important;
+  max-height: none !important;
+  object-fit: contain;
+  flex: 0 0 34px;
+}
+
+header .brand.simple-brand .brand-name {
+  color: #f4f8fc;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.theme-light header .brand.simple-brand .brand-name {
+  color: #102437;
+}
+
+@media (max-width: 700px) {
+  header .brand.simple-brand {
+    gap: 7px !important;
+  }
+
+  header .brand.simple-brand .brand-mark {
+    width: 29px !important;
+    height: 29px !important;
+    flex-basis: 29px;
+  }
+
+  header .brand.simple-brand .brand-name {
+    font-size: 17px;
+  }
+}

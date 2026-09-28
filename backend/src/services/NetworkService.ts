@@ -1,0 +1,8 @@
+import { networkInterfaces } from 'node:os'; import { createConnection } from 'node:net'; import { spawn } from 'node:child_process'; import { readFileSync } from 'node:fs'; import { config } from '../config.js';
+export function interfaceAddress(name:string){return interfaceUp(name)?networkInterfaces()[name]?.find(a=>a.family==='IPv4')?.address:undefined;}
+export function interfaceUp(name:string){try{return readFileSync(`/sys/class/net/${name}/operstate`,'utf8').trim()==='up';}catch{return false;}}
+export function tcp(host:string,port:number,timeout=900){return new Promise<boolean>(resolve=>{const s=createConnection({host,port}); const done=(v:boolean)=>{s.destroy();resolve(v)};s.setTimeout(timeout);s.once('connect',()=>done(true));s.once('timeout',()=>done(false));s.once('error',()=>done(false));});}
+export const g1Reachable=()=>tcp(config.g1Host,22);
+export function ddsReady(timeoutSeconds=6){return new Promise<boolean>(resolve=>{const child=spawn(config.pythonPath,[config.ddsProbePath,config.networkInterface,'--timeout',String(timeoutSeconds)],{stdio:['ignore','ignore','ignore']});let settled=false;const done=(ok:boolean)=>{if(settled)return;settled=true;resolve(ok)};child.once('error',()=>done(false));child.once('close',code=>done(code===0));});}
+function restartLocalDds(){return new Promise<void>(resolve=>{const child=spawn('systemctl',['--user','restart','g1-dds-wifi-local.service'],{stdio:'ignore'});child.once('error',()=>resolve());child.once('close',()=>resolve());});}
+export async function ensureDdsReady(){if(await ddsReady())return true;await restartLocalDds();await new Promise(resolve=>setTimeout(resolve,2500));return await ddsReady(8);}

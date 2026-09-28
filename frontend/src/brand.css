@@ -1,0 +1,21 @@
+.brand {
+  width: 240px;
+  gap: 0;
+}
+
+.brand img {
+  display: block;
+  width: 220px;
+  height: auto;
+  max-height: 54px;
+}
+
+@media (max-width: 520px) {
+  .brand {
+    width: 168px;
+  }
+
+  .brand img {
+    width: 158px;
+  }
+}

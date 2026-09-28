@@ -1,0 +1,2 @@
+export type Mode='hands'|'controllers'|'motion';export type Check={ok:boolean;label:string;detail:string};export type Status={timestamp:string;phase:'idle'|'preparing'|'ready'|'active'|'stopping'|'error';mode:Mode;g1:Check;ethernet:Check;quest:Check;camera:Check;vuer:Check;ssh:Check;teleopPid?:number;lastError?:string};export type Log={time:string;source:string;level:string;message:string};
+export type Telemetry={lowstate:boolean;modeMachine:number|null;motorTemperatureMaxC:number|null;batteryPercent:number|null;sampledAt:string|null};

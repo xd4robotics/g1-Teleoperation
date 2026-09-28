@@ -1,0 +1,14 @@
+[Unit]
+Description=G1 DDS Wi-Fi tunnel (notebook side)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/nmcli connection up G1-WiFi-TAP
+ExecStart=/usr/bin/bash /home/xd4robotics/g1_teleoperation/scripts/g1_dds_endpoint.sh notebook /home/xd4robotics/.config/g1-wireless-dds-profile
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=G1 DDS Wi-Fi tunnel (robot side)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bash /home/unitree/g1_dds_endpoint.sh jetson /home/unitree/.config/g1-wireless-dds-profile
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

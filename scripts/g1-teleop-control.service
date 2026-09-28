@@ -1,0 +1,14 @@
+[Unit]
+Description=XD4 G1 teleoperation frontend and API
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/xd4robotics/g1_teleoperation
+ExecStart=/usr/bin/bash /home/xd4robotics/g1_teleoperation/scripts/run_profile.sh robot
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=45
+
+[Install]
+WantedBy=default.target
