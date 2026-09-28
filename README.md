@@ -89,21 +89,11 @@ Do not start teleoperation while the robot is still booting or while the physica
 
 ### 2. Prepare the operator notebook
 
-Connect the notebook to the `xd4 main` Wi-Fi network. Confirm its expected address:
+Power on or wake the operator notebook and connect it to `xd4 main`. Its expected address is `192.168.8.24`.
 
-```bash
-ip -4 addr show dev wlp1s0
-```
+The deployed notebook starts the frontend, backend, and local DDS service automatically through enabled user-level systemd units. Normal operation does not require opening a terminal, entering the project directory, or manually starting `teleop_hand_and_arm.py`.
 
-The output must contain `192.168.8.24/24`. Do not continue with another notebook address because the DDS tunnel and Vuer endpoint are configured for `192.168.8.24`.
-
-Open the project:
-
-```bash
-cd /home/xd4robotics/g1_teleoperation
-```
-
-The notebook-to-G1 RJ45 cable must be disconnected before starting the wireless DDS tunnel. `wireless_dds_start.sh` intentionally refuses to start when the configured wired adapter has carrier.
+The notebook-to-G1 RJ45 cable should remain disconnected during normal wireless operation.
 
 ### 3. Connect all operator devices to `xd4 main`
 
@@ -115,31 +105,11 @@ Confirm that the following devices use the same network:
 
 The Jetson internal `eth0`, the PC1 address, and `tap-g1` remain on `192.168.123.0/24`; they are not moved to the Wi-Fi subnet.
 
-### 4. Start and verify the DDS path
+### 4. Wait for the automatic services
 
-Start both tunnel endpoints:
+After the notebook and G1 are online on `xd4 main`, allow the automatic services to establish the local DDS relay, `tap-g1`, and the Jetson path. No terminal command is required during normal operation.
 
-```bash
-./scripts/wireless_dds_start.sh
-```
-
-The script:
-
-1. checks that the direct notebook Ethernet cable is disconnected;
-2. activates the notebook `G1-WiFi-TAP` NetworkManager profile;
-3. starts the Jetson relay through SSH;
-4. starts the notebook relay;
-5. verifies that the local relay remains active.
-
-The remote `sudo` prompt may request the Jetson password. The password is not stored in this repository.
-
-Run the non-motion validation:
-
-```bash
-./scripts/wireless_profile_test.sh xd4
-```
-
-Required checks are notebook Wi-Fi, Jetson reachability, `tap-g1`, both relay services, PC1 reachability, lowstate reception, and the backend on port `3001`. The backend check will fail until the application is started; this is expected at this point. The DDS and lowstate checks must pass before preparation.
+The operator verifies readiness from the web interface in step 7. The G1/Jetson and DDS indicators must report online/receiving before **Prepare system** is selected. If they do not, use the engineering recovery checks in the troubleshooting section instead of continuing.
 
 ### 5. Power on the Meta Quest 3
 
@@ -151,27 +121,9 @@ Required checks are notebook Wi-Fi, Jetson reachability, `tap-g1`, both relay se
 
 Connect the Quest to `xd4 main`. Internet access is not required for the local Vuer endpoint used by this project, but the Quest must be able to reach `192.168.8.24`.
 
-### 7. Start the application
+### 7. Open the web interface
 
-From the project directory, start the explicit `xd4` profile:
-
-```bash
-./scripts/run_profile.sh xd4
-```
-
-This command loads `profiles/xd4.env` and starts the backend and frontend development servers together. The frontend orchestrates the Python process; do not manually run `teleop_hand_and_arm.py` during normal operation.
-
-Keep this terminal open. To start without the profile wrapper on the provisioned workstation, the equivalent application command is:
-
-```bash
-env PATH="$PWD/.runtime/bin:$PATH" npm run dev
-```
-
-The explicit profile wrapper is preferred because it supplies the verified `xd4 main` endpoints.
-
-### 8. Open the web interface
-
-On the notebook, open:
+The application starts automatically when the notebook user session starts. On the notebook, open:
 
 ```text
 http://192.168.8.24:5173/
@@ -179,7 +131,9 @@ http://192.168.8.24:5173/
 
 Confirm that the interface reports the G1/Jetson online and lowstate data received. Camera and Vuer can remain unavailable until preparation.
 
-### 9. Select the operating mode
+If the page does not open, follow **Application does not start automatically** under troubleshooting. Do not manually start the Python teleoperation program.
+
+### 8. Select the operating mode
 
 The interface starts with **Hand Tracking** selected.
 
@@ -203,7 +157,7 @@ In the official Unitree `xr_teleoperate` motion guide, `L2+B` enters Damping mod
 
 Do not press unrelated remote-controller combinations during application preparation.
 
-### 10. Select **Prepare system**
+### 9. Select **Prepare system**
 
 Click **Preparar sistema** in the current UI. The backend performs the following sequence:
 
@@ -222,7 +176,7 @@ The backend rejects a second preparation while another session is preparing, rea
 
 Some controlled arm movement during initialization is part of the current arm preparation routine. Immediately use the physical emergency stop or the emergency abort procedure if movement becomes abnormal as described in the safety section.
 
-### 11. Connect the Quest to Vuer
+### 10. Connect the Quest to Vuer
 
 In the Quest browser, open the local Vuer endpoint:
 
@@ -234,7 +188,7 @@ Accept the locally served TLS certificate warning if the headset has not trusted
 
 The web interface reports the Quest as connected when the Python/Vuer process logs an active WebSocket connection. Wait until **Quest / Vuer** reports ready before activation.
 
-### 12. Select **Enable motion**
+### 11. Select **Enable motion**
 
 Confirm all of the following:
 
@@ -247,7 +201,7 @@ Confirm all of the following:
 
 Click **Habilitar movimento**. The backend waits up to five seconds for valid XR motion data, then sends `CMD_START` to the Python IPC server. Robot following does not begin merely because the Quest WebSocket connected; valid XR poses are required.
 
-### 13. Operate
+### 12. Operate
 
 In **Hand Tracking**, the two tracked hands drive the two robot arms. Locomotion is disabled.
 
@@ -263,17 +217,11 @@ In **Full Control**, the controllers drive the arms and the analog sticks provid
 
 Each stick axis is clamped to `[-1, 1]`, maps proportionally to its command range, and produces exactly zero at a zero input. Pressing both analog sticks invokes Unitree `Damp()` as the implemented soft emergency action. This is not a substitute for the physical emergency stop.
 
-### 14. End the session
+### 13. End the session
 
 Use **Encerrar sessão** in the interface before closing the browser or terminal. The backend sends `CMD_STOP`, waits for the teleoperation process to run its normal cleanup, stops the process group if cleanup exceeds its timeout, closes the camera process it started, restores `video_hub_pc4` when applicable, and returns the UI to idle.
 
-After the session has ended, stop the wireless tunnel if the station will be shut down:
-
-```bash
-./scripts/wireless_dds_stop.sh xd4
-```
-
-Then close the application terminal with `Ctrl+C`, power down the Quest, and power down the G1 using the manufacturer procedure.
+After the session has returned to idle, close the browser, power down the Quest, and power down the G1 using the manufacturer procedure. The notebook application remains available for the next session and does not require an operator terminal.
 
 ## Camera path
 
@@ -331,6 +279,26 @@ After preparation, include camera checks with:
 ```
 
 ## Troubleshooting
+
+### Application does not start automatically
+
+The deployed notebook has `g1-teleop-control.service` enabled as a user service. It calls `scripts/run_profile.sh` without an explicit argument; the script reads `xd4` from `~/.config/g1-wireless-dds-profile` and starts the backend and frontend together.
+
+Check the installed service without starting the Python teleoperation process:
+
+```bash
+systemctl --user status g1-teleop-control.service --no-pager
+cat ~/.config/g1-wireless-dds-profile
+ss -ltn '( sport = :3001 or sport = :5173 )'
+```
+
+The profile must be `xd4`, the service must be active, and ports `3001` and `5173` must be listening. If the service is inactive, restart only the web application service:
+
+```bash
+systemctl --user restart g1-teleop-control.service
+```
+
+This starts the interface and API; it does not select **Prepare system** or activate robot motion.
 
 ### G1 or Jetson is offline
 
@@ -415,7 +383,7 @@ Do not commit `.env`, credentials, certificates, private keys, logs, runtime env
 
 ## Known repository constraints
 
-- `scripts/g1-teleop-control.service` currently starts the `robot` profile, not `xd4`. Do not install or use that unit for the normal `xd4 main` workflow without a separately reviewed configuration change. The verified operator command in this README is `./scripts/run_profile.sh xd4`.
+- The service file installed on the operational notebook calls `scripts/run_profile.sh` without an argument and reads the persisted `xd4` profile from `~/.config/g1-wireless-dds-profile`. The service template stored under `scripts/` still contains an explicit `robot` argument and must not overwrite the deployed unit until that template is reviewed separately.
 - The deployed UI currently displays `R1+Y`, while the official `xr_teleoperate` motion guide states `R1+X` for Regular mode. The README follows the official `R1+X` sequence; the UI discrepancy remains because this documentation-only change does not modify runtime behavior.
 - Camera profile files and TLS material live on the Jetson and are not included in this repository.
 - This repository has no license file. XD4 Robotics must select and approve a license before external distribution.
